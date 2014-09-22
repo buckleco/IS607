@@ -88,12 +88,14 @@ bp.year <- ddply(df1, .variables="year", .fun="bestpop")
 head(bp.year[with(bp.year, order(-bestpop)), ])
 ```
 
-```{r}
+```{r fig.width=7, fig.height=6}
 #plot the 'best popular' number per year
 ggplot(bp.year, aes(x=year, y=bestpop)) +geom_point(shape=1) + geom_smooth(method=lm)
+```
+
+```{r}
 #print out the 'best popular' film year
 print(paste("The 'best popular' film year is: ", bp.year[with(bp.year, order(-bestpop)), ][1,1]))
-
 ```
 
 Conclusions
@@ -109,6 +111,9 @@ To investigate this I looked into the frequency of observations per year.
 #check to see the frequency of observations per year
 df.films <- aggregate(title ~ year, df1, length)
 head(df.films)
+```
+
+```{r fig.width=7, fig.height=6}
 ggplot(df.films, aes(x=year, y=title)) +geom_point(shape=1) + geom_smooth(method=lm)
 ```
 
@@ -126,8 +131,14 @@ Some extra code I wrote to do more simplistic ranking
 #average rating per year
 df.rating <- aggregate(rating ~ year, df1, mean)
 #head(df.rating)
+```
+
+```{r fig.width=7, fig.height=6}
 #scatter plot with regression line of avg rating per year
 ggplot(df.rating, aes(x=year, y=rating)) +geom_point(shape=1) + geom_smooth(method=lm)
+```
+
+```{r}
 #sort df.rating by avg rating in descending order
 head(df.rating[with(df.rating, order(-rating)), ])
 ```
@@ -136,8 +147,14 @@ head(df.rating[with(df.rating, order(-rating)), ])
 #average votes per year
 df.votes <- aggregate(votes ~ year, df1, mean)
 #head(df.votes)
+```
+
+```{r fig.width=7, fig.height=6}
 #scatter plot with regression line of avg votes per year
 ggplot(df.votes, aes(x=year, y=votes)) +geom_point(shape=1) + geom_smooth(method=lm)
+```
+
+```{r}
 #sort df.votes by avg votes in descending order
 head(df.votes[with(df.votes, order(-votes)), ])
 ```
@@ -146,8 +163,14 @@ head(df.votes[with(df.votes, order(-votes)), ])
 #examine the relationship between votes and rating
 #join df.rating with df.votes on year using plyr join function
 df.ratingvotes <- join(x=df.rating, y=df.votes, by=c("year"))
+```
+
+```{r fig.width=7, fig.height=6}
 #plot the relationship between avg rating & avg votes per year
 ggplot(df.ratingvotes, aes(x=rating, y=votes)) +geom_point(shape=1) + geom_smooth(method=lm)
+```
+
+```{r fig.width=7, fig.height=6}
 #plot the relationship between film rating & film votes
 ggplot(df1, aes(x=rating, y=votes)) +geom_point(shape=1) + geom_smooth(method=lm)
 ```
