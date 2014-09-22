@@ -1,0 +1,153 @@
+IS 607 Assignment 4
+========================================================
+
+In order to calculate the 'best popular' year for movies I focused on the 
+rating and votes fields. I took rating as a proxy for best and votes as a
+proxy for popularity.
+
+I used quartiles to break the votes into 4 groups and created a new variable 
+called 'qvotes' - with 1 for the number of votes below the lower quartile up to 4 for the number of votes above the upper quartile.
+
+Then I created a function to create the 'best popular' combination. For this
+I simply summed the rating to the 'qvote', to get a 'best popular' measure.
+
+Using ddply I built a dataframe containing the 'best popular' measure for each
+year. Then, using this new dataframe, I used a scatter plot to show the 'best 
+popular' measure for each year.
+
+```{r}
+require(ggplot2)
+require(plyr)
+
+#Download the data
+#getwd()
+df1 <- read.table("movies.tab", sep="\t", header=TRUE, quote="", comment="")
+#df1 <- read.table("movies.small.tab", sep="\t", header=TRUE, quote="", comment="")
+head(df1)
+tail(df1)
+#length(df1$year)
+#str(df1)
+```
+
+Add extra column (qvotes) to df1 based on the quartiles for the number of votes. 
+
+This extra field contain a number from 1-4:
+
+1 - if the number of votes less than or equal to 25th quartile
+
+2 - if the number of votes between the 25th quartile & 50th quartile
+
+3 - if the number of votes between the 50th quartile & 75th quartile
+
+4 - if the number of votes between is greater than the 75th quartile
+
+Create a function (quant.fun) to calculate the appropriate 1-4 value.
+Use the quantile() function and some loops to populate the quant.fun output.
+
+```{r}
+quant.fun <- function(input)
+{
+  quant.vec <- quantile(input$votes)
+  input.vec <- input$votes
+  output.vec <- rep(NA,length(input.vec))
+  for(j in 1:length(input.vec)){
+    if(input.vec[j]<=quant.vec[2]){
+      output.vec[j] <- 1
+    } else if (input.vec[j]<=quant.vec[3]){
+      output.vec[j] <- 2
+    } else if (input.vec[j]<=quant.vec[4]){
+      output.vec[j] <- 3
+    } else if (input.vec[j]<=quant.vec[5]){
+      output.vec[j] <- 4
+    }
+  }  
+  output.vec
+}
+```
+
+```{r}
+#Run quant.fun
+df1$qvotes <- quant.fun(df1)
+#check to see that new column (qvotes) was added as expected
+head(df1)
+```
+
+```{r}
+#Write a function (bestpop) to calculate the 'best popular' year based on rating and qvotes; In order to capture the quantity of votes (popularity) along with the rating (best), add the qvote to the rating and get the average of this value per year
+
+bestpop <- function(input)
+{
+  c(BP = with(input, mean(rating+qvotes)))
+}
+```
+
+```{r}
+bp.year <- ddply(df1, .variables="year", .fun="bestpop")
+#head(bp.year)
+#rank bp.year to see the 'best popular' years
+head(bp.year[with(bp.year, order(-bestpop)), ])
+```
+
+```{r}
+#plot the 'best popular' number per year
+ggplot(bp.year, aes(x=year, y=bestpop)) +geom_point(shape=1) + geom_smooth(method=lm)
+#print out the 'best popular' film year
+print(paste("The 'best popular' film year is: ", bp.year[with(bp.year, order(-bestpop)), ][1,1]))
+
+```
+
+Conclusions
+
+It is quite suspicious that the 'best popular' film in from 1893, where only one film was rated for the whole year.
+
+In fact, the 'best popular' values before ~1930 are much further away from the
+trend line. 
+
+To investigate this I looked into the frequency of observations per year.
+
+```{r}
+#check to see the frequency of observations per year
+df.films <- aggregate(title ~ year, df1, length)
+head(df.films)
+ggplot(df.films, aes(x=year, y=title)) +geom_point(shape=1) + geom_smooth(method=lm)
+```
+
+As clearly seen in the plot above, there are not many observations pre 1930. Therefore, here is a revised 'best popular' film year (post 1930)!
+
+```{r}
+print(paste("The 'best popular' film year (post 1930) is: ", bp.year[with(bp.year, order(-subset(bestpop,year>1930))), ][1,1]))
+```
+
+Appendix
+
+Some extra code I wrote to do more simplistic ranking
+
+```{r}
+#average rating per year
+df.rating <- aggregate(rating ~ year, df1, mean)
+#head(df.rating)
+#scatter plot with regression line of avg rating per year
+ggplot(df.rating, aes(x=year, y=rating)) +geom_point(shape=1) + geom_smooth(method=lm)
+#sort df.rating by avg rating in descending order
+head(df.rating[with(df.rating, order(-rating)), ])
+```
+
+```{r}
+#average votes per year
+df.votes <- aggregate(votes ~ year, df1, mean)
+#head(df.votes)
+#scatter plot with regression line of avg votes per year
+ggplot(df.votes, aes(x=year, y=votes)) +geom_point(shape=1) + geom_smooth(method=lm)
+#sort df.votes by avg votes in descending order
+head(df.votes[with(df.votes, order(-votes)), ])
+```
+
+```{r}
+#examine the relationship between votes and rating
+#join df.rating with df.votes on year using plyr join function
+df.ratingvotes <- join(x=df.rating, y=df.votes, by=c("year"))
+#plot the relationship between avg rating & avg votes per year
+ggplot(df.ratingvotes, aes(x=rating, y=votes)) +geom_point(shape=1) + geom_smooth(method=lm)
+#plot the relationship between film rating & film votes
+ggplot(df1, aes(x=rating, y=votes)) +geom_point(shape=1) + geom_smooth(method=lm)
+```
