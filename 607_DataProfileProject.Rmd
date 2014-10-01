@@ -1,0 +1,623 @@
+IS 607 Project 2 - Data Profile
+========================================================
+
+I used the dataset that was provided in the project guidelines (https://archive.ics.uci.edu/ml/datasets/Adult). I saved it in my working directory and downloaded it from there.
+
+My analysis was done in the following order:
+
+1) examine each variable individually
+
+2) examine the relationships between some variables
+
+3) consider variables that could be recoded or binned
+
+4) final comments
+
+Load data and verify it looks ok
+-------------------------------
+
+```{r}
+require(ggplot2)
+require(dplyr)
+
+#Download the data from the current working directory
+#getwd()
+df1 <- read.table("adult.data", sep=",", header=TRUE, quote="", comment="")
+head(df1)
+tail(df1)
+#add column names to the dataset (based on guidance from the data source)
+names(df1) <- c("age","workclass","fnlwgt","education","educationnum","maritalstatus","occupation","relationship","race","sex","capitalgain","capitalloss","hoursperweek","nativecountry","salarybucket")
+length(df1[,1])
+str(df1)
+```
+
+1) Analysis of individual columns
+========================================================
+
+Column 1 - age
+---------------
+
+After obtaining the head() and tail() of the 'age' column it was clear that it
+was composed of integers. Obtaining the summary confirmed this, showing a min
+of 17 and a max of 90, with a mean of 38.58. There were also no NAs.
+
+Supporting code for 'age' column analysis:
+
+
+```{r}
+#output first 100 elements
+head(df1$age,100)
+#output last 100 elements
+tail(df1$age,100)
+#get the mean, median, min, max & quartiles
+summary(df1$age)
+#count number of NAs
+length(which(is.na(df1$age)))
+#get the levels to ensure no missing or unexpected values
+levels(as.factor(df1$age))
+```
+
+Column 2 - workclass
+---------------
+
+After obtaining the head() and tail() of the 'workclass' column it was clear that it was composed of string based categories. Obtaining the summary confirmed that there were 9 categories one of which was '?'. There were 1,836 '?' observations. There were also no NAs or numeric values.
+
+Supporting code for 'workclass' column analysis:
+
+
+```{r}
+#output first 100 elements
+head(df1$workclass,100)
+#output last 100 elements
+tail(df1$workclass,100)
+#get the summary
+summary(df1$workclass)
+#count number of NAs
+length(which(is.na(df1$workclass)))
+#get the levels
+levels(df1$workclass)
+```
+
+Column 3 - fnlwgt
+---------------
+
+
+After obtaining the head() and tail() of the 'fnlwgt' column it was clear that it was composed of numbers. Obtaining the summary confirmed this, showing a min of 12,280 and a max of 1,485,000, with a mean of 189,800. There were also no NAs or non-numeric values. 
+At first I thought this was some sort of unique identifier, but this was ruled out by checking for duplicates. Upon further reading here:
+'https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.names'
+I realised that this is an estimated field that I simply did not understand. Despite this, I kept it in the dataset for further analysis. I think variables that are only fully understood should be removed from the dataset.
+
+Supporting code for 'fnlwgt' column analysis:
+
+
+```{r}
+#output first 100 elements
+head(df1$fnlwgt,100)
+#output last 100 elements
+tail(df1$fnlwgt,100)
+#get the mean, median, min, max & quartiles
+summary(df1$fnlwgt)
+#count number of NAs
+length(which(is.na(df1$fnlwgt)))
+#check for duplicates by comparing the number of observations to unique observations
+length(df1$fnlwgt)
+length(unique(df1$fnlwgt))
+#check to make sure all values are numeric
+is.numeric(df1$fnlwgt)
+#check that all observations are numeric
+nrow(filter(df1,is.numeric(df1$fnlwgt)))
+```
+
+
+
+Column 4 - education
+---------------
+
+
+After obtaining the head() and tail() of the 'education' column it was clear that it was composed of string based categories. Obtaining the summary confirmed that there were 16 categories none of which were '?'. There were also no NAs or numeric values.
+
+Supporting code for 'education' column analysis:
+
+
+```{r}
+#output first 100 elements
+head(df1$education,100)
+#output last 100 elements
+tail(df1$education,100)
+#get the mean, median, min, max & quartiles
+summary(df1$education)
+#count number of NAs
+length(which(is.na(df1$education)))
+#get the mean, median, min, max & quartiles
+levels(df1$education)
+```
+
+Column 5 - educationnum
+---------------
+
+
+After obtaining the head() and tail() of the 'educationnum' column it was clear that it was composed of integers. Obtaining the summary confirmed this, showing a min of 1 and a max of 16, with a mean of 10.08. There were also no NAs.
+
+Supporting code for 'educationnum' column analysis:
+
+
+```{r}
+#output first 100 elements
+head(df1$educationnum,100)
+#output last 100 elements
+tail(df1$educationnum,100)
+#get the mean, median, min, max & quartiles
+summary(df1$educationnum)
+#count number of NAs
+length(which(is.na(df1$educationnum)))
+#get the levels to ensure no missing or unexpected values
+levels(as.factor(df1$educationnum))
+```
+
+
+Column 6 - maritalstatus
+---------------
+
+
+After obtaining the head() and tail() of the 'maritalstatus' column it was clear that it was composed of string based categories. Obtaining the summary confirmed that there were 7 categories none of which were '?'. There were also no NAs or numeric values.
+
+Supporting code for 'maritalstatus' column analysis:
+
+
+```{r}
+#output first 100 elements
+head(df1$maritalstatus,100)
+#output last 100 elements
+tail(df1$maritalstatus,100)
+#get the count per level
+summary(df1$maritalstatus)
+#count number of NAs
+length(which(is.na(df1$maritalstatus)))
+#get the levels
+levels(df1$maritalstatus)
+```
+
+
+Column 7 - occupation
+---------------
+
+
+After obtaining the head() and tail() of the 'occupation' column it was clear that it was composed of string based categories. Obtaining the summary confirmed that there were 15 categories one of which was '?'. There were 1,843 '?' observations. There were also no NAs or numeric values.
+
+Supporting code for 'occupation' column analysis:
+
+
+```{r}
+#output first 100 elements
+head(df1$occupation,100)
+#output last 100 elements
+tail(df1$occupation,100)
+#get the count per level
+summary(df1$occupation)
+#count number of NAs
+length(which(is.na(df1$occupation)))
+#get the mean, median, min, max & quartiles
+levels(df1$occupation)
+```
+
+Column 8 - relationship
+---------------
+
+
+After obtaining the head() and tail() of the 'relationship' column it was clear that it was composed of string based categories. Obtaining the summary confirmed that there were 6 categories none of which were '?'. There were also no NAs or numeric values.
+
+Supporting code for 'relationship' column analysis:
+
+
+```{r}
+#output first 100 elements
+head(df1$relationship,100)
+#output last 100 elements
+tail(df1$relationship,100)
+#get the count per level
+summary(df1$relationship)
+#count number of NAs
+length(which(is.na(df1$relationship)))
+#get the levels
+levels(df1$relationship)
+```
+
+Column 9 - race
+---------------
+
+
+After obtaining the head() and tail() of the 'race' column it was clear that it was composed of string based categories. Obtaining the summary confirmed that there were 5 categories none of which were '?'. There were also no NAs or numeric values.
+
+Supporting code for 'race' column analysis:
+
+
+```{r}
+#output first 100 elements
+head(df1$race,100)
+#output last 100 elements
+tail(df1$race,100)
+#get the count per level
+summary(df1$race)
+#count number of NAs
+length(which(is.na(df1$race)))
+#get the levels
+levels(df1$race)
+```
+
+Column 10 - sex
+---------------
+
+
+After obtaining the head() and tail() of the 'sex' column it was clear that it was composed of string based categories. Obtaining the summary confirmed that there were 2 categories none of which were '?'. There were also no NAs or numeric values.
+
+Supporting code for 'sex' column analysis:
+
+
+```{r}
+#output first 100 elements
+head(df1$sex,100)
+#output last 100 elements
+tail(df1$sex,100)
+#get the count per level
+summary(df1$sex)
+#count number of NAs
+length(which(is.na(df1$sex)))
+#get the levels
+levels(df1$sex)
+```
+
+Column 11 - capitalgain
+---------------
+
+
+After obtaining the head() and tail() of the 'capitalgain' column it was clear that it was composed of numbers. Obtaining the summary confirmed this, showing a min of 0 and a max of 100,000, with a mean of 1,078. However, it is important to note that there are a large number of zeros (29,849). There were also no NAs.
+
+Supporting code for 'capitalgain' column analysis:
+
+
+```{r}
+#output first 100 elements
+head(df1$capitalgain,100)
+#output last 100 elements
+tail(df1$capitalgain,100)
+#get the mean, median, min, max & quartiles
+summary(df1$capitalgain)
+#check the number of observations containing zero
+nrow(filter(df1,capitalgain==0))
+#count number of NAs
+length(which(is.na(df1$capitalgain)))
+#get the levels to ensure no missing or unexpected values
+levels(as.factor(df1$capitalgain))
+#needs more investigation
+```
+
+
+Column 12 - capitalloss
+---------------
+
+
+After obtaining the head() and tail() of the 'capitalloss' column it was clear that it was composed of numbers. Obtaining the summary confirmed this, showing a min of 0 and a max of 4,356, with a mean of 87.31. However, it is important to note that there are a large number of zeros (31,041). There were also no NAs.
+
+Supporting code for 'capitalloss' column analysis:
+
+
+```{r}
+#output first 100 elements
+head(df1$capitalloss,100)
+#output last 100 elements
+tail(df1$capitalloss,100)
+#get the mean, median, min, max & quartiles
+summary(df1$capitalloss)
+#check the number of observations containing zero
+nrow(filter(df1,capitalloss==0))
+#count number of NAs
+length(which(is.na(df1$capitalloss)))
+#get the levels to ensure no missing or unexpected values
+levels(as.factor(df1$capitalloss))
+#needs more investigation
+```
+
+
+Column 13 - hoursperweek
+---------------
+
+
+After obtaining the head() and tail() of the 'hoursperweek' column it was clear that it was composed of integers. Obtaining the summary confirmed this, showing a min of 1 and a max of 99, with a mean of 40.44. There were also no NAs.
+
+Supporting code for 'hoursperweek' column analysis:
+
+
+```{r}
+#output first 100 elements
+head(df1$hoursperweek,100)
+#output last 100 elements
+tail(df1$hoursperweek,100)
+#get the mean, median, min, max & quartiles
+summary(df1$hoursperweek)
+#count number of NAs
+length(which(is.na(df1$hoursperweek)))
+#get the levels to ensure no missing or unexpected values
+levels(as.factor(df1$hoursperweek))
+```
+
+Column 14 - nativecountry
+---------------
+
+
+After obtaining the head() and tail() of the 'nativecountry' column it was clear that it was composed of string based categories. Obtaining the summary confirmed that there were 42 categories one of which was '?'. There were 583 '?' observations. There were also no NAs or numeric values.
+
+Supporting code for 'nativecountry' column analysis:
+
+
+```{r}
+#output first 100 elements
+head(df1$nativecountry,100)
+#output last 100 elements
+tail(df1$nativecountry,100)
+#get the count by level
+summary(df1$nativecountry)
+#count number of NAs
+length(which(is.na(df1$nativecountry)))
+#get the levels
+levels(df1$nativecountry)
+```
+
+Column 15 - salarybucket
+---------------
+
+
+After obtaining the head() and tail() of the 'salarybucket' column it was clear that it was composed of string based categories. Obtaining the summary confirmed that there were 2 categories none of which were '?'. There were also no NAs or numeric values.
+
+Supporting code for 'salarybucket' column analysis:
+
+
+```{r}
+#output first 100 elements
+head(df1$salarybucket,100)
+#output last 100 elements
+tail(df1$salarybucket,100)
+#get the count by level
+summary(df1$salarybucket)
+#count number of NAs
+length(which(is.na(df1$salarybucket)))
+#get the mean, median, min, max & quartiles
+levels(df1$salarybucket)
+```
+
+2) Analysis of variable relationships
+========================================================
+
+I picked out, what I thought to be appropriate variables to examine in conjunction with other variables.
+
+The graph (below) of average weekly hours worked per age looks as expected - increases up to 25, plateaus until about 60 and then decreases. The regression line implies that this is negative correlation relationship. Note, due to the low number of observations per age after 75 the right hand side of the graph displays some erratic numbers. Consequently, I also graphed the relationship for ages up to 74 only.
+
+
+```{r}
+#examining correlations
+#age & hours per week
+
+#average hours per age
+df.hours.mean <- aggregate(hoursperweek ~ age, df1, mean)
+#number of observations per age
+df.hours.obs <- aggregate(hoursperweek ~ age, df1, length)
+#check output
+head(df.hours.mean)
+head(df.hours.obs)
+#scatter plot with regression line of avg hours per age
+ggplot(df.hours.mean, aes(x=age, y=hoursperweek)) +geom_point(shape=1) + geom_smooth(method=lm)
+#scatter plot with regression line of count of hours observations per age
+ggplot(df.hours.obs, aes(x=age, y=hoursperweek)) +geom_point(shape=1) + geom_smooth(method=lm)
+#scatter plot with regression line of avg hours per age under 75
+ggplot(filter(df.hours.mean, age < 75), aes(x=age, y=hoursperweek)) +geom_point(shape=1) + geom_smooth(method=lm)
+```
+
+I broke the average hours down by a number of variables. The average hours per sex were consistent with what I expected. Males generally on average work longer hours than females. I also broke the data into over/under 50yrs buckets. As expected, the overs 50s work less hours on average.
+I also broke the hoursperweek down by race, but this wasn't especially meaningful.
+I also broke down the hoursperweek by occupation. I wasn't looking for a particular pattern here, just better information around the different ocupations.
+
+
+```{r}
+#average hours per sex
+df.hours.sex.mean <- aggregate(hoursperweek ~ sex, df1, mean)
+#check output
+head(df.hours.sex.mean)
+#scatter plot of avg hours per sex
+ggplot(df.hours.sex.mean, aes(x=sex, y=hoursperweek)) +geom_point(shape=1)
+#further analysis of hours per week by sex based for over/under 50yrs old 
+#average hours per sex per age bucket (over/under 50)
+#build data frame of avg hoursperweek per sex for under 51yrs
+df.hours.sex.mean.low <- aggregate(hoursperweek ~ sex, select(filter(df1, age < 51), sex, hoursperweek), mean)
+#build data frame of avg hoursperweek per sex for over 50yrs
+df.hours.sex.mean.high <- aggregate(hoursperweek ~ sex, select(filter(df1, age > 50), sex, hoursperweek), mean)
+#check output
+df.hours.sex.mean.low
+df.hours.sex.mean.high
+#plot avg hoursperweek per sex for under 51yrs
+ggplot(df.hours.sex.mean.low, aes(x=sex, y=hoursperweek)) +geom_point(shape=1)
+#plot avg hoursperweek per sex for over 50yrs
+ggplot(df.hours.sex.mean.high, aes(x=sex, y=hoursperweek)) +geom_point(shape=1)
+
+
+#average hours per race
+df.hours.race.mean <- aggregate(hoursperweek ~ race, df1, mean)
+#check output
+head(df.hours.race.mean)
+#scatter plot of avg hours per race
+ggplot(df.hours.race.mean, aes(x=race, y=hoursperweek)) +geom_point(shape=1) + coord_flip()
+
+
+#average hours per occupation
+df.hours.occ.mean <- aggregate(hoursperweek ~ occupation, df1, mean)
+#check output
+head(df.hours.occ.mean)
+#create data frames for the top & bottom 5 occupations
+df.hours.occ.mean.low <- head(arrange(df.hours.occ.mean, hoursperweek),5)
+df.hours.occ.mean.high <- tail(arrange(df.hours.occ.mean, hoursperweek),5)
+#scatter plot with regression line of avg hours per occupation
+ggplot(df.hours.occ.mean, aes(x=occupation, y=hoursperweek)) +geom_point(shape=1) + coord_flip()
+#scatter plot with regression line of avg hours per occupation - lowest 5
+ggplot(df.hours.occ.mean.low, aes(x=occupation, y=hoursperweek)) +geom_point(shape=1) + coord_flip()
+#scatter plot with regression line of avg hours per occupation - highest 5
+ggplot(df.hours.occ.mean.high, aes(x=occupation, y=hoursperweek)) +geom_point(shape=1) + coord_flip()
+
+```
+
+
+Next I looked at education level by age, sex, race & occupation.
+
+Education by age is consistent with what you would expect in the general population. Higher education level from 25yrs to about 55yrs. Lower before & after. Again the low number of observations at +75yrs causes the data to become a little unreliable.
+Nothing meaningful to report about education level by sex.
+There are some variations in education level by race. One interesting aspect is that the 'Other' bucket is the lowest. It would be a good idea to look into this further as part of future analysis of this dataset.
+Breaking the education level out by occupation gave further insight into the occupation variable. As expected the 'Prof-speciality' group had the highest level of education.
+
+
+```{r}
+#average education level per age
+df.edu.mean <- aggregate(educationnum ~ age, df1, mean)
+#check output
+head(df.edu.mean)
+#scatter plot with regression line of avg education level per age
+ggplot(df.edu.mean, aes(x=age, y=educationnum)) +geom_point(shape=1) + geom_smooth(method=lm)
+
+#average education level per sex
+df.edu.sex.mean <- aggregate(educationnum ~ sex, df1, mean)
+#check output
+head(df.edu.sex.mean)
+#scatter plot avg education level per sex
+ggplot(df.edu.sex.mean, aes(x=sex, y=educationnum)) +geom_point(shape=1)
+
+#average education level per race
+df.edu.race.mean <- aggregate(educationnum ~ race, df1, mean)
+#check output
+head(df.edu.race.mean)
+#scatter plot of avg education level per race
+ggplot(df.edu.race.mean, aes(x=race, y=educationnum)) +geom_point(shape=1) + coord_flip()
+
+#average education level per occupation
+df.edu.occ.mean <- aggregate(educationnum ~ occupation, df1, mean)
+#check output
+head(df.edu.occ.mean)
+#scatter plot with regression line of avg education level per occupation
+ggplot(df.edu.occ.mean, aes(x=occupation, y=educationnum)) +geom_point(shape=1) + coord_flip()
+
+```
+
+Using a slightly different technique incorporating functions from the dplyr package I examined the relationship between the capitalgain & educationnum variables.
+As expected there is a positive correlation between capitalgain and education level.
+
+```{r}
+#create a small data frame with just the capitalgain & educationnum variables
+ce.df1 <- select(df1,capitalgain,educationnum)
+head(ce.df1)
+nrow(ce.df1)
+#group this by educationnum
+ce.df2 <- group_by(ce.df1,educationnum)
+head(ce.df2)
+nrow(ce.df2)
+#get a count of the observations within this grouping
+ce.df3 <- summarise(ce.df2, count = n())
+ce.df3
+head(ce.df3)
+nrow(ce.df3)
+#get the average capitalgain of the observations within this grouping
+ce.df4 <- summarise(ce.df2, capitalgainavg = mean(capitalgain))
+#output in descending order
+arrange(ce.df4,desc(capitalgainavg))
+#head(ce.df4)
+#nrow(ce.df4)
+#as expected there is a positive correlation between capitalgainsavg and educationnum 
+ce.df4
+ggplot(ce.df4, aes(x=educationnum, y=capitalgainavg)) +geom_point(shape=1) + geom_smooth(method=lm)
+```
+
+3) Consideration of variables that could be re-coded or binned
+========================================================
+
+Examining the '?'s
+
+Missing data is represented by '?'s in the dataset. There are '?'s in the 'workclass', 'occupation' and 'nativecountry' variables.
+
+It looks like there is a strong connection between the 'workclass' & 'occupation' '?'s, with all '?'s in the 'workclass' observations (1,836) containing a '?' in the 'occupation' variable as well. This could imply that the choice options for the respondant in the occupation column had some gaps that didn't cover all occupation types. I would therefore keep these missing values because they could well be meaningful.
+
+The '?'s in the the 'nativecountry' column seemed to have no connection to any other variable as far as can be observed. Again it could well be a flaw in the data collection (perhaps some countries were not an option). Therefore, I would be inclined to keep the observations with these missing values as well.
+
+Supporting code:
+
+
+```{r}
+#Examining the '?'s
+  
+#1836 rows containing ? for workclass
+nrow(filter(df1,df1$workclass==" ?"))
+#1843 rows containing ? for occupation
+nrow(filter(df1,df1$occupation==" ?"))
+#1836 rows containing ? for both workclass & occupation
+nrow(filter(df1,df1$workclass==" ?", df1$occupation==" ?"))
+#the ?s in the the nativecountry column seemed to have no connection to any other variable
+#code in the line below was used to examine the nativecountry '?'s, but is not displayed here due to the number of rows in the output
+#filter(df1,df1$nativecountry==" ?")
+#check that all observations are numeric
+#nrow(filter(df1,is.numeric(df1$fnlwgt)))
+#df1$nativecountry
+#nrow(filter(df1,df1$workclass==" ?", df1$occupation==" ?", df1$nativecountry==" ?"))
+```
+
+Recoding data variables
+
+Recoding could be used with the nativecountry variable. For example breaking this into two categories: US and non-US. Firsly I do some analyis below examining average hours per week and nativecountry. Then I re-do the analysis using the re-coded variable instead. This provides a very interesting result showing that the US vs non-US average hours per week is practically the same. This was not clear before the re-coded variable was added.
+
+I used another example of re-coding the data in section 2 above, when I broke the avg weekly hours worked down by sex for under/over 50yrs old.
+
+```{r}
+#create a small data frame with just the nativecountry & hoursperweek variables
+nh.df1 <- select(df1,hoursperweek,nativecountry)
+#head(nh.df1)
+#nrow(nh.df1)
+#group this by nativecountry
+nh.df2 <- group_by(nh.df1,nativecountry)
+#head(nh.df2)
+#nrow(nh.df2)
+#get a count of the observations within this grouping
+nh.df3 <- summarise(nh.df2, count = n())
+nh.df3
+#head(nh.df3)
+#nrow(nh.df3)
+#get the average hoursperweek of the observations within this grouping
+nh.df4 <- summarise(nh.df2, hoursperweekavg = mean(hoursperweek))
+#output in descending order
+arrange(nh.df4,desc(hoursperweekavg))
+#head(nh.df4)
+#nrow(nh.df4)
+
+#redo the above analysis, but use US and non-US
+nh.df5 <- nh.df1
+#add extra column with a US/non-US breakdown
+attach(nh.df5)
+nh.df5$nativecountrycat[nativecountry == " United-States"] <- "US"
+nh.df5$nativecountrycat[nativecountry != " United-States"] <- "Non-US"
+detach(nh.df5)
+#remove the existing nativecountry column
+nh.df5 <- subset(nh.df5, select = -c(nativecountry))
+#group this by nativecountrycat
+nh.df5 <- group_by(nh.df5,nativecountrycat)
+#get the average hoursperweek of the observations within this new grouping
+nh.df5 <- summarise(nh.df5, hoursperweekavg = mean(hoursperweek))
+nh.df5  
+```
+
+Binning variables or observations
+
+As mentioned above (at the beginning of section 2) when analysing the data by age, the quantity of observations above the age of 75 is pretty sparse and can lead to some unexpected results. Hence, I re-worked that dataset, omitting observations where the age variable equaled 75 or more.
+
+I question the usefulness of the salarybucket variable (column 15). From reading the background to the dataset it appears that this is a field generated by an algorithm and wasn't collected with the original data. I would therefore be inclined to remove this column as it could well be mis-interpreted otherwise.
+
+Education and educationnum are effectively the same thing represented in a different way. Despite this, they are both useful and should be kept.
+
+As mentioned when I performed the individual column analysis above, the 'fnlwgt' variable is something that I do not fully understand. Further examination would be required before deciding to remove this from the dataset.
+
+4) Final comments
+========================================================
+
+I have only scratched the surface with the analysis I performed above. If I was to continue examining the dataset further I would investigate the 'fnlwgt' variable. According to the information on the dataset it is related to demographic characteristics, so I would examine it in relation to race, sex, maritalstatus, relationship, education and nativecountry to start with.
+
+I would also do more analysis around the observations in the workclass, maritalstatus and relationship variables, along with other subset combinations of variables I have examined already.
