@@ -1,0 +1,20 @@
+607 - Week 8 Discussion
+========================================================
+
+How come this ggplot doesn't appear in markdown when viewed in github?:
+
+```{r}
+require(ggplot2)
+
+#create a data frame containing height and weight
+height <- c(161, 166, 170, 175, 181, 187)
+weight <- c(62, 63, 74, 75, 79, 89)
+df.example <- data.frame(height, weight)
+head(df.example)
+
+#scatter plot with regression line of height & weight
+ggplot(df.example, aes(x=height, y=weight)) +geom_point(shape=1) + geom_smooth(method=lm)
+
+```
+
+
