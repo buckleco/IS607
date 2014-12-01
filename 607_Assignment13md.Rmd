@@ -1,0 +1,47 @@
+IS 607 - Assignment 13 - Question 3
+========================================================
+
+For this question I used the 'adult.data' file from the dataset profile project
+
+```{r}
+require(dplyr)
+
+#load the file from the local directory
+df1 <- read.table("adult.data", sep=",", header=TRUE, quote="", comment="")
+names(df1) <- c("age","workclass","fnlwgt","education","educationnum","maritalstatus","occupation","relationship","race","sex","capitalgain","capitalloss","hoursperweek","nativecountry","salarybucket")
+```
+
+Using the standard aggregate function
+
+```{r}
+#Start the clock
+agg.pt <- proc.time()
+#average hours per age
+df.hours.mean <- aggregate(hoursperweek ~ age, df1, mean)
+#Stop the clock
+agg.pt <- (proc.time() - agg.pt)
+```
+
+Using dplyr to perform the same aggregation
+
+```{r}
+#Start the clock
+dplyr.agg.pt <- proc.time()
+#create a small data frame with just the hoursperweek & age variables
+dplyr.df.hours.mean <- select(df1,hoursperweek,age)
+#group this by age
+dplyr.df.hours.mean <- group_by(dplyr.df.hours.mean,age)
+#get the average hoursperweek of the observations within this grouping
+dplyr.df.hours.mean <- summarise(dplyr.df.hours.mean, hoursperweek = mean(hoursperweek))
+#Stop the clock
+dplyr.agg.pt <- (proc.time() - dplyr.agg.pt)
+```
+
+Print the results
+
+```{r}
+#head(df.hours.mean)
+#head(dplyr.df.hours.mean)
+print(agg.pt)
+print(dplyr.agg.pt)
+```
