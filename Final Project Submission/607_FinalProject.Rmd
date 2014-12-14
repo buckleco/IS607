@@ -1,0 +1,232 @@
+IS 607 - Final Project
+========================================================
+
+
+**Project aim**
+
+The aim of this project is to perform a comparative examination between data from the peer-to-peer lending site Lending Club and depository institution consumer credit data from the Federal Reserve. Specifically, it looks at outstanding consumer credit from depository institutions against loans originated by Lending Club on a monthly basis from June 2007 to December 2011. Before making this comparison, I perform some analysis on the Lending Club data, namely examining the distribution of the total amount lent during the time period across credit rating classes of the borrowers and by state.
+
+
+**Background information and project motivation**
+
+Lending Club is an alternative to the traditional banking system that operates fully online as a credit marketplace connecting borrowers and lenders. Borrowers apply for a loan via Lending Club, who perform the credit analysis and price the loan. They then put the loan onto the marketplace for potential lenders to actually provide the loan. The loans made via Lending Club between 2007 & 2011 are available in a csv file from their website:
+
+https://www.lendingclub.com/info/download-data.action
+
+This dataset contains 39,786 rows, with each row representing a loan originated during the period June 2007 to December 2011.
+
+In order to perform a comparative examination with traditional lenders I needed to source data from the Federal Reserve website - specifically from the table on this page:
+
+http://www.federalreserve.gov/releases/g19/HIST/cc_hist_nr_levels.html
+
+This table contains 862 rows of consumer credit data across various categories since 1943 up to now. I am specifically interested in the depository institutions column for my comparison.
+
+My professional background is in the area of credit risk and therefore my motivation for performing this analysis is to learn more about the consumer credit market in the US and the growth of peer-to-peer lending.
+
+
+**Challenges encountered**
+
+The Lending Club csv file failed to load in its original state. The first row contained a url and the actual dataset started on the second row.  So, I removed the first row. Also, there was a secondary set of data below the main data relating to loans that were not approved. Again I removed these rows. Now the data was in good shape, aside from one last snag. 
+
+One column contained text related to the borrowers reason for needing the loan. It looked like this information was screen scrapped from somewhere and the contents varied quite a lot from loan to loan. This field caused an error loading the file. As the field wasn't relevant for my needs I removed it from the file.
+
+I initially loaded the file using read.table(), but I encountered issues with text fields containing commas being split out, causing the data to be read incorrectly. I caught this issue when I compared the data frame to the csv file and the data frame contained about ~3000 extra rows. Using read.csv() worked fine instead.
+
+Reading the FED data from the table on the website was fairly straight-forward. It was read in initially as a list of lists, so there was a little bit of tweaking to get it into a data frame. Also, the first row had to be removed, as it contained a duplication of the column names. Additionally, all the fields fed through as characters and the depository institutions field containing numbers as text needed to be converted.
+
+Given the FED numbers were an aggregate for the whole economy there was an order of magnitude issue between these numbers and the Lending Club loan amounts. Therefore, I needed to use a log scale for my graph to convey the message I wanted.
+
+
+**New feature (not covered in class)**
+
+The main new feature I encountered as part of this project was the combination of the maps & ggplot packages to plot state level data onto a map of the US. Additionally I used a couple of functions from the lubridate and stringr packages.
+
+
+**Theories & Findings**
+
+My expectation beforehand was that the quantity of loans (by total notional value) originated by Lending Club would grow at a faster pace than the total consumer credit outstanding against depository institutions. From what I read in the media, peer-to-peer lending has been growing significantly over the last 10 years and my examination of the data for Lending Club bears this out.
+Additionally, the credit risk profile of the borrowers (larger number of higher rated loans ever decreasing down through the rating levels) was consistent with my expectations, as was the geographical distribution of the loans (greater total amounts borrowed in states with greater population areas).
+
+**Code Outline**
+
+The code below flows in the following order:
+- 1.Download the Lending Club data (via csv)
+- 2.Graph the distribution of Lending Club loans across credit rating quality
+- 3.Preparation of the data to plot the loan amounts by state
+- 4.Graph the distribution of Lending Club loans by state
+- 5.Aggregate the Lending Club data by originated loan amounts up to monthly intervals
+- 6.Download the FED consumer credit data (from a website table)
+- 7.Clean up and rearrange the FED data bringing in the relevant Lending Club data (from part 5)
+- 8.Plot the Lending Club loan amounts and FED depository institutions outstanding consumer credit amounts
+
+**Import the required packages.**
+
+```{r message=FALSE, warning=FALSE}
+library(ggplot2)
+library(plyr)
+library(dplyr)
+library(lubridate)
+library(stringr)
+library(XML)
+library(maps)
+```
+
+**1. Download the Lending Club data (via csv) and do some validation checks.**
+
+```{r}
+#the file (LoanStats3a_finalVersion.csv) should be saved in your working directory; get your working directory by using this function: 'getwd()'
+#Download the data in a csv file from the current working directory
+df.lc <- read.csv("LoanStats3a_finalVersion.csv")
+
+#do some data validation checks
+head(df.lc)
+tail(df.lc)
+length(df.lc[,1])
+nrow(df.lc)
+str(df.lc)
+#sanity check of the loan amounts - should be between 500 & 35,000 (the max loan amount)
+summary(df.lc$loan_amnt)
+```
+
+**2. Graph the distribution of Lending Club loans across credit rating quality**
+
+```{r fig.width=10, fig.height=5}
+#the credit rating grades go from A to G with A being the highest credit rating 
+p1 <- ggplot(df.lc, aes(x=grade, y=loan_amnt/1000000)) + geom_bar(stat = "identity")
+#add a title
+p1 <- p1 + ggtitle("Plot of aggregate Lending Club loan amounts per credit rating")
+#edit the y-axis label
+p1 <- p1 + xlab("Credit Rating Grades (A-G)") 
+p1 <- p1 + ylab("Loan Amounts (USDm)") 
+p1
+```
+
+**3. Preparation of the data to plot the loan amounts by state**
+
+```{r}
+#aggregate the loan amounts per state
+df.lc.state <- aggregate(loan_amnt ~ addr_state, df.lc, sum)
+
+#add a region column to the dataframe using the state.abb & state.name datasets
+df.lc.state$region <- tolower(state.name[match(df.lc.state$addr_state,state.abb)])
+#need to add district of columbia manually as it is not included in state.name
+df.lc.state$region[which(df.lc.state$addr_state == "DC")] <- "district of columbia"
+#denominate the loan amounts in millions for display purposes
+df.lc.state$loan_amnt <- round(df.lc.state$loan_amnt/1000000,digits=2)
+
+#download the ggplot us state map data
+gg.state.map <- map_data('state')
+#merge the two dataframes based on region
+df.lc.state.map <- merge(df.lc.state, gg.state.map, by = 'region')
+#arrange the data based on the order field
+df.lc.state.map <- arrange(df.lc.state.map, order)
+#create dataframe containing the xy coordinates of each state to be used to display the state abbreviation in the plot below 
+gg.states <- data.frame(state.center, state.abb)
+```
+  
+**4. Graph the distribution of Lending Club loans by state**
+
+```{r fig.width=10, fig.height=5}
+p2 <- ggplot(data = df.lc.state.map, aes(x = long, y = lat, group = group))
+#represent the loan amounts in 4 groupings
+p2 <- p2 + geom_polygon(aes(fill = cut_number(loan_amnt, 4)))
+#put a grey outline around the states
+p2 <- p2 + geom_path(colour = 'gray', linestyle = 2)
+#label the graph legend set the colour palette
+p2 <- p2 + scale_fill_brewer('Lending Club Loans USDm', palette  = 'BuGn')
+#populate the graph with the state abbreviations
+p2 <- p2 + geom_text(data = gg.states, aes(x = x, y = y, label = state.abb, group = NULL), size = 2)
+#add a title
+p2 <- p2 + ggtitle("Plot of aggregate Lending Club loan amounts per state")
+#set the bckground to be white
+p2 <- p2 + theme_bw()
+p2
+```
+
+**5. Aggregate the Lending Club data by originated loan amounts up to monthly intervals (so it can easily be merged with the FED data later in part 7).**
+
+```{r}
+#aggregate the Lending Club data by originated loan amounts up to monthly intervals
+#the issue date conveniently only contains one date per month
+df.lc.month <- aggregate(loan_amnt ~ issue_d, df.lc, sum)
+
+#using lubridate to populate a month and a year identifier
+df.lc.month$month <- month(mdy(df.lc.month$issue_d))
+df.lc.month$year <- year(mdy(df.lc.month$issue_d))
+
+#order the aggregated data chronogically - now it is ready to merge with FED dateset
+df.lc.month <- df.lc.month[with(df.lc.month, order(year, month)), ]
+```
+
+**6. Download the FED consumer credit data (via webpage table) and do some validation checks.**
+
+```{r}
+
+theURL <- "http://www.federalreserve.gov/releases/g19/HIST/cc_hist_nr_levels.html"
+fed.output <- readHTMLTable(theURL,stringsAsFactors=FALSE)
+#fed.output
+
+# convert the output into a data frame like the structure of the table on the FED website
+#head(fed.output[3])
+fed.output <- fed.output[3]
+df.fed <- fed.output[[1]]
+#remove the first row (duplicate)
+df.fed = df.fed[-1,]
+
+#do some data validation checks on the resultant data frame
+head(df.fed)
+tail(df.fed)
+length(df.fed[,1])
+nrow(df.fed)
+#the below analysis shows that the numeric values from the website table have fed through as characters. This will be corrected in the code below (after I have reduced the number of rows)
+str(df.fed)
+```
+
+**7. Tidy & rearrange the FED data, so that it only contains rows for time periods corresponding to the Lending Club data i.e. 55 monthly intervals from June 2007 to Dec 2011.**
+
+```{r}
+#bring in the date and depository institutions data only
+df.fed.total = subset(df.fed, select = c("Date","Depositoryinstitutions"))
+
+#renaming the Depository Institutions column to make the name shorter
+names(df.fed.total)[names(df.fed.total)=="Depositoryinstitutions"] <- "DepInst"
+
+#extract day, month, year and UTC Date fields from the Date field
+#use stringr str_split function to split out the dates
+lol <- str_split(df.fed.total[,1]," ",n=2)
+#get the first (month text) & second (year text) elements in the list
+lolm <- sapply(lol, "[[", 1)
+loly <- sapply(lol, "[[", 2)
+#create a day (default to 1), month & year column and using these create a UTC data column
+df.fed.total$day <- 1
+df.fed.total$month <- match(lolm,month.abb)
+df.fed.total$year <- as.numeric(loly)
+df.fed.total$UTCDate <- dmy(do.call(paste, c(df.fed.total[c(3, 4, 5)], sep = "/")))
+
+#remove all the rows before and after the rows that correspond to the Lending Club dataset months (i.e before June 2007 and after Dec 2011)
+df.fed.total <- subset(df.fed.total, as.Date(df.fed.total[ , 6]) > as.Date("2007-05-31"))
+df.fed.total <- subset(df.fed.total, as.Date(df.fed.total[ , 6]) < as.Date("2012-01-01"))
+
+#convert the depository institution field to numeric
+df.fed.total$DepInst <- as.numeric(gsub(",","", df.fed.total$DepInst))
+
+#now the loan data from the Lending Club dataset can be added
+#note, the amounts are divided by 1 million so they are comparable with the FED amounts (which are denominated in USDm)
+df.fed.total$LCLoanAmt <- (df.lc.month$loan_amnt/1000000)
+```
+
+**8. Plot the Lending Club loan amounts and FED depository institutions outstanding consumer credit amounts.**
+
+```{r fig.width=10, fig.height=5}
+p3 <- ggplot(df.fed.total, aes(UTCDate)) + 
+  geom_line(aes(y = DepInst, colour = "DepInst")) + 
+  geom_line(aes(y = LCLoanAmt, colour = "LoanAmt"))
+#use a log scale for the y axis due to the order of magnitude difference between the numbers
+p3 <- p3 + scale_y_log10()
+#add a title
+p3 <- p3 + ggtitle("Aggregate Lending Club loan amounts against Depository Institutions outstanding consumer credit")
+p3 <- p3 + ylab("USDm") 
+#update legend
+p3 <- p3 + scale_colour_manual(values=c("red","blue"),name="",labels=c("Depository Institutions", "Lending Club Loans"))
+p3
+```
